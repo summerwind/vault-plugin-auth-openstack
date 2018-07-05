@@ -1,0 +1,15 @@
+[[constraint]]
+  name = "github.com/hashicorp/vault"
+  revision = "533003e27840d9646cb4e7d23b3a113895da1dd0"
+
+[[constraint]]
+  name = "github.com/hashicorp/go-hclog"
+  revision = "69ff559dc25f3b435631604f573a5fa1efdb6433"
+
+[[constraint]]
+  name = "github.com/gophercloud/gophercloud"
+  revision = "19abc56a8cd8d3630ab9735173cb92c0bf635f33"
+
+[[constraint]]
+  name = "github.com/gophercloud/utils"
+  revision = "18450e98e12dae90303d0483730333797d04be9b"
