@@ -10,6 +10,11 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+type address struct {
+	Version int    `mapstructure:"version"`
+	Address string `mapstructure:"addr"`
+}
+
 type Attestor struct {
 	storage logical.Storage
 }
@@ -61,7 +66,7 @@ func (at *Attestor) AttestMetadata(instance *servers.Server, metadataKey string,
 // AttestMetadata is used to attest the IP address of OpenStack instance
 // with source IP address. This method support IPv4 only.
 func (at *Attestor) AttestAddr(instance *servers.Server, addr string) error {
-	var addresses map[string][]servers.Address
+	var addresses map[string][]address
 
 	if instance.AccessIPv4 == addr {
 		return nil
@@ -72,13 +77,15 @@ func (at *Attestor) AttestAddr(instance *servers.Server, addr string) error {
 		return err
 	}
 
-	for _, val := range addresses {
-		if val[0].Version != 4 {
-			continue
-		}
+	for _, addrs := range addresses {
+		for _, val := range addrs {
+			if val.Version != 4 {
+				continue
+			}
 
-		if val[0].Address == addr {
-			return nil
+			if val.Address == addr {
+				return nil
+			}
 		}
 	}
 
