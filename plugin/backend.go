@@ -123,7 +123,9 @@ func (b *OpenStackAuthBackend) periodicHandler(ctx context.Context, req *logical
 		return err
 	}
 
-	b.Logger().Info(fmt.Sprintf("%d expired auth attempts has been removed", count))
+	if count > 0 {
+		b.Logger().Info(fmt.Sprintf("%d expired auth attempts has been removed", count))
+	}
 
 	return nil
 }

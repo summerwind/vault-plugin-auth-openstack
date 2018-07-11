@@ -71,9 +71,8 @@ func cleanupAuthAttempt(ctx context.Context, s logical.Storage) (int, error) {
 			if err != nil {
 				return 0, err
 			}
+			count += 1
 		}
-
-		count += 1
 	}
 
 	return count, nil
