@@ -20,7 +20,9 @@ Calculate the checksum of the plugin and register it in Vault's plugin catalog. 
 
 ```
 $ export SHA256_SUM=$(shasum -a 256 "/etc/vault/plugins/vault-plugin-auth-openstack" | cut -d' ' -f1)
-$ vault write sys/plugins/catalog/openstack-auth command="vault-plugin-auth-openstack" sha_256="${SHA256_SUM}"
+$ vault write sys/plugins/catalog/openstack-auth \
+    command="vault-plugin-auth-openstack" \
+    sha_256="${SHA256_SUM}"
 ```
 
 Enable authentication with the plugin.
@@ -49,7 +51,7 @@ Create a role to associate the OpenStack instance with the Vault policies. The f
 $ vault write auth/openstack/role/dev \
     policies="prod,dev" \
     metadata_key="vault-role" \
-    auth_period=120
+    auth_period=120 \
     auth_limit=3
 ```
 
