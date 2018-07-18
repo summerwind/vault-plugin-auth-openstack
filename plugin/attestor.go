@@ -26,12 +26,12 @@ func NewAttestor(s logical.Storage) *Attestor {
 
 // Attest is used to attest a OpenStack instance based on binded role and IP address.
 func (at *Attestor) Attest(instance *servers.Server, role *Role, addr string) error {
-	deadline, err := at.verifyAuthPeriod(instance.Created, role.AuthPeriod)
+	deadline, err := at.VerifyAuthPeriod(instance, role.AuthPeriod)
 	if err != nil {
 		return err
 	}
 
-	_, err = at.verifyAuthLimit(instance.ID, role.AuthLimit, deadline)
+	_, err = at.VerifyAuthLimit(instance, role.AuthLimit, deadline)
 	if err != nil {
 		return err
 	}
@@ -95,8 +95,8 @@ func (at *Attestor) AttestAddr(instance *servers.Server, addr string) error {
 // verifyAuthPeriod is used to verify the deadline of authentication.
 // The deadline is calculated by the create date of OpenStack instance and
 // the authentication period specified by a binded role.
-func (at *Attestor) verifyAuthPeriod(created time.Time, period time.Duration) (time.Time, error) {
-	deadline := created.Add(period)
+func (at *Attestor) VerifyAuthPeriod(instance *servers.Server, period time.Duration) (time.Time, error) {
+	deadline := instance.Created.Add(period)
 	if time.Now().After(deadline) {
 		return deadline, errors.New("authentication deadline exceeded")
 	}
@@ -106,17 +106,17 @@ func (at *Attestor) verifyAuthPeriod(created time.Time, period time.Duration) (t
 
 // verifyAuthLimit is used to verify the number of attempts of authentication.
 // The limit of authentication is specified by a binded role.
-func (at *Attestor) verifyAuthLimit(instanceID string, limit int, deadline time.Time) (int, error) {
+func (at *Attestor) VerifyAuthLimit(instance *servers.Server, limit int, deadline time.Time) (int, error) {
 	ctx := context.Background()
 
-	attempt, err := readAuthAttempt(ctx, at.storage, instanceID)
+	attempt, err := readAuthAttempt(ctx, at.storage, instance.ID)
 	if err != nil {
 		return 0, err
 	}
 
 	if attempt == nil {
 		attempt = &AuthAttempt{
-			Name:     instanceID,
+			Name:     instance.ID,
 			Deadline: deadline,
 			Count:    0,
 		}
