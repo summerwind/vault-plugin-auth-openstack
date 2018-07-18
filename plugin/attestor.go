@@ -36,12 +36,17 @@ func (at *Attestor) Attest(instance *servers.Server, role *Role, addr string) er
 		return err
 	}
 
+	err = at.AttestAddr(instance, addr)
+	if err != nil {
+		return err
+	}
+
 	err = at.AttestMetadata(instance, role.MetadataKey, role.Name)
 	if err != nil {
 		return err
 	}
 
-	err = at.AttestAddr(instance, addr)
+	err = at.AttestTenantID(instance, role.TenantID)
 	if err != nil {
 		return err
 	}
@@ -63,7 +68,7 @@ func (at *Attestor) AttestMetadata(instance *servers.Server, metadataKey string,
 	return nil
 }
 
-// AttestMetadata is used to attest the IP address of OpenStack instance
+// AttestAddr is used to attest the IP address of OpenStack instance
 // with source IP address. This method support IPv4 only.
 func (at *Attestor) AttestAddr(instance *servers.Server, addr string) error {
 	var addresses map[string][]address
@@ -92,7 +97,20 @@ func (at *Attestor) AttestAddr(instance *servers.Server, addr string) error {
 	return errors.New("invalid address: address mismatched")
 }
 
-// verifyAuthPeriod is used to verify the deadline of authentication.
+// AttestTenantID is used to attest the tenant ID of OpenStack instance.
+func (at *Attestor) AttestTenantID(instance *servers.Server, tenantID string) error {
+	if tenantID == "" {
+		return nil
+	}
+
+	if instance.TenantID != tenantID {
+		return errors.New("tenant ID mismatched")
+	}
+
+	return nil
+}
+
+// VerifyAuthPeriod is used to verify the deadline of authentication.
 // The deadline is calculated by the create date of OpenStack instance and
 // the authentication period specified by a binded role.
 func (at *Attestor) VerifyAuthPeriod(instance *servers.Server, period time.Duration) (time.Time, error) {
@@ -104,7 +122,7 @@ func (at *Attestor) VerifyAuthPeriod(instance *servers.Server, period time.Durat
 	return deadline, nil
 }
 
-// verifyAuthLimit is used to verify the number of attempts of authentication.
+// VerifyAuthLimit is used to verify the number of attempts of authentication.
 // The limit of authentication is specified by a binded role.
 func (at *Attestor) VerifyAuthLimit(instance *servers.Server, limit int, deadline time.Time) (int, error) {
 	ctx := context.Background()

@@ -16,6 +16,7 @@ type Role struct {
 	MaxTTL      time.Duration `json:"max_ttl" structs:"max_ttl" mapstructure:"max_ttl"`
 	Period      time.Duration `json:"period" structs:"period" mapstructure:"period"`
 	MetadataKey string        `json:"metadata_key" structs:"metadata_key" mapstructure:"metadata_key"`
+	TenantID    string        `json:"tenant_id" structs:"tenant_id" mapstructure:"tenant_id"`
 	AuthPeriod  time.Duration `json:"auth_period" structs:"auth_period" mapstructure:"auth_period"`
 	AuthLimit   int           `json:"auth_limit" structs:"auth_limit" mapstructure:"auth_limit"`
 }
