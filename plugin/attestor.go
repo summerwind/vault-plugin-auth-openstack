@@ -58,11 +58,11 @@ func (at *Attestor) Attest(instance *servers.Server, role *Role, addr string) er
 func (at *Attestor) AttestMetadata(instance *servers.Server, metadataKey string, roleName string) error {
 	val, ok := instance.Metadata[metadataKey]
 	if !ok {
-		return errors.New("invalid metadata: key not found")
+		return errors.New("metadata key not found")
 	}
 
 	if val != roleName {
-		return errors.New("invalid metadata: role name mismatched")
+		return errors.New("metadata role name mismatched")
 	}
 
 	return nil
@@ -94,7 +94,7 @@ func (at *Attestor) AttestAddr(instance *servers.Server, addr string) error {
 		}
 	}
 
-	return errors.New("invalid address: address mismatched")
+	return errors.New("address mismatched")
 }
 
 // AttestTenantID is used to attest the tenant ID of OpenStack instance.
