@@ -1,0 +1,38 @@
+version: '2'
+
+tasks:
+  build:
+    cmds:
+      - go build .
+  build-release:
+    cmds:
+      - GOOS={{.OS}} GOARCH={{.ARCH}} go build .
+      - shasum -a 256 vault-plugin-auth-openstack > sha256sum.txt
+      - tar -czf release/vault-plugin-auth-openstack_{{.OS}}_{{.ARCH}}.tar.gz vault-plugin-auth-openstack sha256sum.txt
+      - rm -rf vault-plugin-auth-openstack sha256sum.txt
+  test:
+    cmds:
+      - go vet ./plugin
+      - go test -coverprofile=cover.out ./plugin
+  cover:
+    deps: [test]
+    cmds:
+      - go tool cover -html=cover.out
+  release:
+    deps: [test]
+    cmds:
+      - mkdir -p release
+      - task: build-release
+        vars: {OS: "linux", ARCH: "amd64"}
+      - task: build-release
+        vars: {OS: "linux", ARCH: "arm64"}
+      - task: build-release
+        vars: {OS: "linux", ARCH: "arm"}
+      - task: build-release
+        vars: {OS: "darwin", ARCH: "amd64"}
+  vendor:
+    cmds:
+      - dep ensure -v
+  clean:
+    cmds:
+      - rm -rf vault-plugin-auth-openstack release cover.out
