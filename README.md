@@ -74,6 +74,48 @@ After created, instance can be authenticated with Vault as follows. Note that th
 $ vault write auth/openstack/login instance_id="${INSTANCE_ID}" role="dev"
 ```
 
+## Authentication flow
+
+This plugin gets the instance information from the OpenStack API and attestates the existence of the instance based on the information. The detailed authentication flow is as follows.
+
+1. Receive the instance ID and the role name through the `vault login` command.
+2. Get the instance information from OpenStack API based on the instance ID. If the instance information does not exist, the authentication fails.
+3. Get the role configuration based on the role name. If the role configuration does not exist, the authenticate fails.
+4. Validate the authentication period specified in the role with the creation time of the instance. If the deadline was exceeded, the authentication fails.
+5. Validate the limit of authentication attempt count specified in the role. If authentication exceeds the maximum number of attempts, the authentication fails.
+6. Validate the instance IP address with the remote IP address of `vault login`. If address mismatched, the authentication fails.
+7. Validate the status of the instance. If the instance is not active, the authentication fails.
+8. Validate the role name contained in the metadata of the instance with the key specified in the role configuration. If the key of metadata does not exist or role name is mismatched, the authentication fails.
+9. Validate the tenant ID of the instance with the role configuration. If the tenand ID is mismatched, the authentication fails. This validation is performed only if the Tenant ID is specified in the role configuration.
+
+## Development
+
+If you wish to work on this plugin, you'll first need [Go](https://golang.org), [dep](https://github.com/golang/dep), and [go-task](https://github.com/go-task/task) installed on your machine.
+
+First make sure Go is properly installed, including setting up a [GOPATH](https://golang.org/doc/code.html#GOPATH) environment. Next, clone this repository into $GOPATH/src/github.com/summerwind/vault-plugin-auth-openstack. You can then install the required Go packages to the vendor directory.
+
+```
+$ task vendor
+```
+
+To build a development version of this plugin, run `task build`. This will put the plugin binary in the current directory.
+
+```
+$ task build
+```
+
+To run the tests, invoke `task test`.
+
+```
+$ task test
+```
+
+You can also see the test coverage report as follows.
+
+```
+$ task cover
+```
+
 ## Should I Use This?
 
 This is an experimental plugin. We don't reccomend to use this in your production.
