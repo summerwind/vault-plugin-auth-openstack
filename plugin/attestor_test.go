@@ -30,16 +30,18 @@ func TestAttest(t *testing.T) {
 		limit    int
 		attempt  int
 		metadata string
+		status   string
 		addr     string
 		tenantID string
 		result   bool
 	}{
-		{0, 2, 1, "test", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", true},
-		{-130, 2, 1, "test", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
-		{0, 2, 3, "test", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
-		{0, 2, 1, "invalid", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
-		{0, 2, 1, "test", "192.168.1.2", "fcad67a6189847c4aecfa3c81a05783b", false},
-		{0, 2, 1, "test", "192.168.1.1", "invalid", false},
+		{0, 2, 1, "test", "ACTIVE", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", true},
+		{-130, 2, 1, "test", "ACTIVE", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
+		{0, 2, 3, "test", "ACTIVE", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
+		{0, 2, 1, "invalid", "ACTIVE", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
+		{0, 2, 1, "test", "ERROR", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
+		{0, 2, 1, "test", "ACTIVE", "192.168.1.2", "fcad67a6189847c4aecfa3c81a05783b", false},
+		{0, 2, 1, "test", "ACTIVE", "192.168.1.1", "invalid", false},
 	}
 
 	_, storage := newTestBackend(t)
@@ -64,6 +66,7 @@ func TestAttest(t *testing.T) {
 		instance.ID = fmt.Sprintf("test%d", i)
 		instance.AccessIPv4 = test.addr
 		instance.Metadata["vault-role"] = test.metadata
+		instance.Status = test.status
 		instance.TenantID = test.tenantID
 		instance.Created = time.Now().Add(time.Duration(test.diff) * time.Second)
 
@@ -95,6 +98,29 @@ func TestAttestMetadata(t *testing.T) {
 		instance.Metadata[test.key] = test.val
 
 		err := attestor.AttestMetadata(instance, "vault-role", "test")
+		if (err == nil) != test.result {
+			t.Errorf("unexpected result: %v - %v", test, err)
+		}
+	}
+}
+
+func TestAttestStatus(t *testing.T) {
+	var tests = []struct {
+		status string
+		result bool
+	}{
+		{"ACTIVE", true},
+		{"STOPPED", false},
+	}
+
+	_, storage := newTestBackend(t)
+	attestor := NewAttestor(storage)
+
+	for _, test := range tests {
+		instance := newTestInstance()
+		instance.Status = test.status
+
+		err := attestor.AttestStatus(instance)
 		if (err == nil) != test.result {
 			t.Errorf("unexpected result: %v - %v", test, err)
 		}

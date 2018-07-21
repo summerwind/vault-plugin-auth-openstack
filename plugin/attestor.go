@@ -41,6 +41,11 @@ func (at *Attestor) Attest(instance *servers.Server, role *Role, addr string) er
 		return err
 	}
 
+	err = at.AttestStatus(instance)
+	if err != nil {
+		return err
+	}
+
 	err = at.AttestMetadata(instance, role.MetadataKey, role.Name)
 	if err != nil {
 		return err
@@ -63,6 +68,15 @@ func (at *Attestor) AttestMetadata(instance *servers.Server, metadataKey string,
 
 	if val != roleName {
 		return errors.New("metadata role name mismatched")
+	}
+
+	return nil
+}
+
+// AttestStatus is used to attest the status of OpenStack instance.
+func (at *Attestor) AttestStatus(instance *servers.Server) error {
+	if instance.Status != "ACTIVE" {
+		return errors.New("instance is not active")
 	}
 
 	return nil
