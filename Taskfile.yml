@@ -4,12 +4,6 @@ tasks:
   build:
     cmds:
       - go build .
-  build-release:
-    cmds:
-      - GOOS={{.OS}} GOARCH={{.ARCH}} go build .
-      - shasum -a 256 vault-plugin-auth-openstack > sha256sum.txt
-      - tar -czf release/vault-plugin-auth-openstack_{{.OS}}_{{.ARCH}}.tar.gz vault-plugin-auth-openstack sha256sum.txt
-      - rm -rf vault-plugin-auth-openstack sha256sum.txt
   test:
     cmds:
       - go vet ./plugin
@@ -18,21 +12,27 @@ tasks:
     deps: [test]
     cmds:
       - go tool cover -html=cover.out
-  release:
+  package:
+    cmds:
+      - GOOS={{.OS}} GOARCH={{.ARCH}} go build .
+      - shasum -a 256 vault-plugin-auth-openstack > sha256sum.txt
+      - tar -czf release/vault-plugin-auth-openstack_{{.OS}}_{{.ARCH}}.tar.gz vault-plugin-auth-openstack sha256sum.txt
+      - rm -rf vault-plugin-auth-openstack sha256sum.txt
+  dist:
     deps: [test]
     cmds:
-      - mkdir -p release
-      - task: build-release
+      - mkdir -p dist
+      - task: package
         vars: {OS: "linux", ARCH: "amd64"}
-      - task: build-release
+      - task: package
         vars: {OS: "linux", ARCH: "arm64"}
-      - task: build-release
+      - task: package
         vars: {OS: "linux", ARCH: "arm"}
-      - task: build-release
+      - task: package
         vars: {OS: "darwin", ARCH: "amd64"}
   vendor:
     cmds:
       - dep ensure -v
   clean:
     cmds:
-      - rm -rf vault-plugin-auth-openstack release cover.out
+      - rm -rf vault-plugin-auth-openstack dist cover.out
