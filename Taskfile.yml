@@ -16,7 +16,8 @@ tasks:
     cmds:
       - GOOS={{.OS}} GOARCH={{.ARCH}} go build .
       - shasum -a 256 vault-plugin-auth-openstack > sha256sum.txt
-      - tar -czf release/vault-plugin-auth-openstack_{{.OS}}_{{.ARCH}}.tar.gz vault-plugin-auth-openstack sha256sum.txt
+      - tar -czf dist/vault-plugin-auth-openstack_{{.OS}}_{{.ARCH}}.tar.gz vault-plugin-auth-openstack sha256sum.txt
+      - echo `cat sha256sum.txt` "({{.OS}}_{{.ARCH}})"
       - rm -rf vault-plugin-auth-openstack sha256sum.txt
   dist:
     deps: [test]
