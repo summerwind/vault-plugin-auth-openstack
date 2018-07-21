@@ -1,0 +1,4 @@
+vendor
+dist
+vault-plugin-auth-openstack
+cover.out
