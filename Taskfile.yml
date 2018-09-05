@@ -1,13 +1,16 @@
 version: '2'
 
+vars:
+  NAME: vault-plugin-auth-openstack
+
 tasks:
   build:
     cmds:
       - go build .
   test:
     cmds:
-      - go vet ./plugin
-      - go test -coverprofile=cover.out ./plugin
+      - go vet ./...
+      - go test -v -coverprofile=cover.out ./...
   cover:
     deps: [test]
     cmds:
@@ -15,10 +18,10 @@ tasks:
   package:
     cmds:
       - GOOS={{.OS}} GOARCH={{.ARCH}} go build .
-      - shasum -a 256 vault-plugin-auth-openstack > sha256sum.txt
-      - tar -czf dist/vault-plugin-auth-openstack_{{.OS}}_{{.ARCH}}.tar.gz vault-plugin-auth-openstack sha256sum.txt
+      - shasum -a 256 {{.NAME}} > sha256sum.txt
+      - tar -czf dist/{{.NAME}}_{{.OS}}_{{.ARCH}}.tar.gz {{.NAME}} sha256sum.txt
       - echo `cat sha256sum.txt` "({{.OS}}_{{.ARCH}})"
-      - rm -rf vault-plugin-auth-openstack sha256sum.txt
+      - rm -rf {{.NAME}} sha256sum.txt
   dist:
     deps: [test]
     cmds:
@@ -36,4 +39,4 @@ tasks:
       - dep ensure -v
   clean:
     cmds:
-      - rm -rf vault-plugin-auth-openstack dist cover.out
+      - rm -rf {{.NAME}} dist cover.out
