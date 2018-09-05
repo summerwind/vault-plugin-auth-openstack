@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/hashicorp/vault"
-  revision = "e21712a687889de1125e0a12a980420b1a4f72d3"
+  version = "v0.11.0"
 
 [[constraint]]
   name = "github.com/hashicorp/go-hclog"
