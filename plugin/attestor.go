@@ -56,6 +56,11 @@ func (at *Attestor) Attest(instance *servers.Server, role *Role, addr string) er
 		return err
 	}
 
+	err = at.AttestUserID(instance, role.UserID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -119,6 +124,19 @@ func (at *Attestor) AttestTenantID(instance *servers.Server, tenantID string) er
 
 	if instance.TenantID != tenantID {
 		return errors.New("tenant ID mismatched")
+	}
+
+	return nil
+}
+
+// AttestUserID is used to attest the user ID of OpenStack instance.
+func (at *Attestor) AttestUserID(instance *servers.Server, userID string) error {
+	if userID == "" {
+		return nil
+	}
+
+	if instance.UserID != userID {
+		return errors.New("user ID mismatched")
 	}
 
 	return nil

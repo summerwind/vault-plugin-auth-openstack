@@ -194,6 +194,29 @@ func TestAttestTenantID(t *testing.T) {
 	}
 }
 
+func TestAttestUserID(t *testing.T) {
+	var tests = []struct {
+		userID string
+		result bool
+	}{
+		{"", true},
+		{"9349aff8be7545ac9d2f1d00999a23cd", true},
+		{"invalid", false},
+	}
+
+	_, storage := newTestBackend(t)
+	attestor := NewAttestor(storage)
+
+	for _, test := range tests {
+		instance := newTestInstance()
+
+		err := attestor.AttestUserID(instance, test.userID)
+		if (err == nil) != test.result {
+			t.Errorf("unexpected result: %v - %v", test, err)
+		}
+	}
+}
+
 func TestVerifyAuthPeriod(t *testing.T) {
 	var tests = []struct {
 		diff   int
