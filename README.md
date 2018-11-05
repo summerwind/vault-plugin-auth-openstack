@@ -86,7 +86,8 @@ This plugin gets the instance information from the OpenStack API and attestates 
 6. Validate the instance IP address with the remote IP address of `vault login`. If address mismatched, the authentication fails.
 7. Validate the status of the instance. If the instance is not active, the authentication fails.
 8. Validate the role name contained in the metadata of the instance with the key specified in the role configuration. If the key of metadata does not exist or role name is mismatched, the authentication fails.
-9. Validate the tenant ID of the instance with the role configuration. If the tenand ID is mismatched, the authentication fails. This validation is performed only if the Tenant ID is specified in the role configuration.
+9. Validate the tenant ID of the instance with the role configuration. If the tenand ID is mismatched, the authentication fails. This validation is performed only if the tenant ID is specified in the role configuration.
+9. Validate the user ID of the instance with the role configuration. If the user ID is mismatched, the authentication fails. This validation is performed only if the user ID is specified in the role configuration.
 
 ## Development
 
