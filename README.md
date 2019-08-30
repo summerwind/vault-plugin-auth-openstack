@@ -20,7 +20,7 @@ Calculate the checksum of the plugin and register it in Vault's plugin catalog. 
 
 ```
 $ export SHA256_SUM=$(shasum -a 256 "/etc/vault/plugins/vault-plugin-auth-openstack" | cut -d' ' -f1)
-$ vault write sys/plugins/catalog/openstack-auth \
+$ vault write sys/plugins/catalog/auth/openstack \
     command="vault-plugin-auth-openstack" \
     sha_256="${SHA256_SUM}"
 ```
@@ -28,7 +28,7 @@ $ vault write sys/plugins/catalog/openstack-auth \
 Enable authentication with the plugin.
 
 ```
-$ vault auth enable -path="openstack" -plugin-name="openstack-auth" plugin
+$ vault auth enable -path="openstack" -plugin-name="openstack" plugin
 ```
 
 ## Configuration
@@ -91,13 +91,7 @@ This plugin gets the instance information from the OpenStack API and attestates 
 
 ## Development
 
-If you wish to work on this plugin, you'll first need [Go](https://golang.org), [dep](https://github.com/golang/dep), and [go-task](https://github.com/go-task/task) installed on your machine.
-
-First make sure Go is properly installed, including setting up a [GOPATH](https://golang.org/doc/code.html#GOPATH) environment. Next, clone this repository into $GOPATH/src/github.com/summerwind/vault-plugin-auth-openstack. You can then install the required Go packages to the vendor directory.
-
-```
-$ task vendor
-```
+If you wish to work on this plugin, you'll first need [Go](https://golang.org) and [go-task](https://github.com/go-task/task) installed on your machine.
 
 To build a development version of this plugin, run `task build`. This will put the plugin binary in the current directory.
 
