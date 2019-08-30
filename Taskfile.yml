@@ -2,11 +2,12 @@ version: '2'
 
 vars:
   NAME: vault-plugin-auth-openstack
+  VERSION: 0.3.0
 
 tasks:
   build:
     cmds:
-      - go build .
+      - CGO_ENABLED=0 go build .
   test:
     cmds:
       - go vet ./...
@@ -19,13 +20,13 @@ tasks:
     cmds:
       - GOOS={{.OS}} GOARCH={{.ARCH}} CGO_ENABLED=0 go build .
       - shasum -a 256 {{.NAME}} > sha256sum.txt
-      - tar -czf dist/{{.NAME}}_{{.OS}}_{{.ARCH}}.tar.gz {{.NAME}} sha256sum.txt
+      - tar -czf release/{{.NAME}}_{{.OS}}_{{.ARCH}}.tar.gz {{.NAME}} sha256sum.txt
       - echo `cat sha256sum.txt` "({{.OS}}_{{.ARCH}})"
       - rm -rf {{.NAME}} sha256sum.txt
-  dist:
+  release:
     deps: [test]
     cmds:
-      - mkdir -p dist
+      - mkdir -p release
       - task: package
         vars: {OS: "linux", ARCH: "amd64"}
       - task: package
@@ -34,9 +35,10 @@ tasks:
         vars: {OS: "linux", ARCH: "arm"}
       - task: package
         vars: {OS: "darwin", ARCH: "amd64"}
-  vendor:
+  github-release:
+    deps: [release]
     cmds:
-      - dep ensure -v
+      - ghr v{{.VERSION}} release/
   clean:
     cmds:
-      - rm -rf {{.NAME}} dist cover.out
+      - rm -rf {{.NAME}} release cover.out
