@@ -1,4 +1,3 @@
-vendor
-dist
+release
 vault-plugin-auth-openstack
 cover.out
