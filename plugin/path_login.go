@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/hashicorp/vault/helper/policyutil"
-	"github.com/hashicorp/vault/logical"
-	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/sdk/framework"
+	"github.com/hashicorp/vault/sdk/helper/policyutil"
+	"github.com/hashicorp/vault/sdk/logical"
 )
 
 const loginSynopsis = "Authenticates OpenStack instance with Vault."

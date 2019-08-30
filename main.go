@@ -1,29 +1,30 @@
 package main
 
 import (
-	"log"
 	"os"
 
-	"github.com/hashicorp/vault/helper/pluginutil"
-	"github.com/hashicorp/vault/logical/plugin"
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/vault/api"
+	"github.com/hashicorp/vault/sdk/plugin"
+
 	openstack "github.com/summerwind/vault-plugin-auth-openstack/plugin"
 )
 
 func main() {
-	meta := &pluginutil.APIClientMeta{}
-
+	meta := &api.PluginAPIClientMeta{}
 	flags := meta.FlagSet()
 	flags.Parse(os.Args[1:])
 
 	tlsConfig := meta.GetTLSConfig()
-	tlsProviderFunc := pluginutil.VaultPluginTLSProvider(tlsConfig)
+	tlsProviderFunc := api.VaultPluginTLSProvider(tlsConfig)
 
 	err := plugin.Serve(&plugin.ServeOpts{
 		BackendFactoryFunc: openstack.Factory,
 		TLSProviderFunc:    tlsProviderFunc,
 	})
 	if err != nil {
-		log.Println(err)
+		logger := hclog.New(&hclog.LoggerOptions{})
+		logger.Error("plugin shutting down", "error", err)
 		os.Exit(1)
 	}
 }

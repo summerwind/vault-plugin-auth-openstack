@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/hashicorp/vault/logical"
+	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/mitchellh/mapstructure"
 )
 

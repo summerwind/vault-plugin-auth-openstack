@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/vault/logical"
+	"github.com/hashicorp/vault/sdk/logical"
 )
 
 type Role struct {

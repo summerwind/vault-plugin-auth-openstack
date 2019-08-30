@@ -3,38 +3,13 @@ module github.com/summerwind/vault-plugin-auth-openstack
 go 1.12
 
 require (
-	github.com/SermoDigital/jose v0.0.0-20161205224733-f6df55f235c2
-	github.com/armon/go-radix v1.0.0
-	github.com/golang/protobuf v1.2.0
-	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
 	github.com/gophercloud/gophercloud v0.0.0-20180626021939-19abc56a8cd8
 	github.com/gophercloud/utils v0.0.0-20180611015817-18450e98e12d
-	github.com/hashicorp/errwrap v1.0.0
-	github.com/hashicorp/go-cleanhttp v0.5.0
-	github.com/hashicorp/go-hclog v0.0.0-20180709165350-ff2cf002a8dd
-	github.com/hashicorp/go-immutable-radix v1.0.0
-	github.com/hashicorp/go-multierror v1.0.0
-	github.com/hashicorp/go-plugin v0.0.0-20181030172320-54b6ff97d818
-	github.com/hashicorp/go-retryablehttp v0.0.0-20180718195005-e651d75abec6
-	github.com/hashicorp/go-rootcerts v0.0.0-20160503143440-6bb64b370b90
-	github.com/hashicorp/go-sockaddr v0.0.0-20180320115054-6d291a969b86
-	github.com/hashicorp/go-uuid v1.0.0
-	github.com/hashicorp/go-version v1.0.0
-	github.com/hashicorp/golang-lru v0.5.0
-	github.com/hashicorp/hcl v1.0.0
-	github.com/hashicorp/vault v0.11.4
-	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d
-	github.com/mitchellh/go-homedir v1.0.0
-	github.com/mitchellh/go-testing-interface v1.0.0
+	github.com/hashicorp/go-hclog v0.9.2
+	github.com/hashicorp/vault/api v1.0.4
+	github.com/hashicorp/vault/sdk v0.1.13
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/oklog/run v1.0.0
-	github.com/pierrec/lz4 v0.0.0-20181005164709-635575b42742
-	github.com/ryanuber/go-glob v0.0.0-20160226084822-572520ed46db
-	golang.org/x/net v0.0.0-20181102091132-c10e9556a7bc
-	golang.org/x/sys v0.0.0-20181031143558-9b800f95dbbc
-	golang.org/x/text v0.3.0
-	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
-	google.golang.org/genproto v0.0.0-20181101192439-c830210a61df
-	google.golang.org/grpc v1.16.0
-	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	gopkg.in/yaml.v2 v2.2.2 // indirect
 )
