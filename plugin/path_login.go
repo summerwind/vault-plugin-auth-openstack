@@ -57,6 +57,8 @@ func (b *OpenStackAuthBackend) loginHandler(ctx context.Context, req *logical.Re
 	}
 	roleName := val.(string)
 
+	b.Logger().Info("login attempt", "instance_id", instanceID, "role", roleName)
+
 	role, err := readRole(ctx, req.Storage, roleName)
 	if err != nil || role == nil {
 		return logical.ErrorResponse(fmt.Sprintf("invalid role: %v", err)), nil
@@ -64,7 +66,9 @@ func (b *OpenStackAuthBackend) loginHandler(ctx context.Context, req *logical.Re
 
 	client, err := b.getClient(ctx, req.Storage)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get openstack client: %v", err)
+		msg := "openstack client error"
+		b.Logger().Error(msg, "error", err)
+		return nil, fmt.Errorf("%s: %v", msg, err)
 	}
 
 	instance, err := servers.Get(client, instanceID).Extract()
@@ -74,11 +78,14 @@ func (b *OpenStackAuthBackend) loginHandler(ctx context.Context, req *logical.Re
 
 	attestor := NewAttestor(req.Storage)
 	if err != nil {
-		return nil, err
+		msg := "attestor error"
+		b.Logger().Error(msg, "error", err)
+		return nil, fmt.Errorf("%s: %v", msg, err)
 	}
 
 	err = attestor.Attest(instance, role, req.Connection.RemoteAddr)
 	if err != nil {
+		b.Logger().Info("attestation failed", "error", err)
 		return logical.ErrorResponse(fmt.Sprintf("failed to login: %v", err)), nil
 	}
 
@@ -142,7 +149,9 @@ func (b *OpenStackAuthBackend) authRenewHandler(ctx context.Context, req *logica
 
 	client, err := b.getClient(ctx, req.Storage)
 	if err != nil {
-		return nil, err
+		msg := "openstack client error"
+		b.Logger().Error(msg, "error", err)
+		return nil, fmt.Errorf("%s: %v", msg, err)
 	}
 
 	instance, err := servers.Get(client, instanceID).Extract()
@@ -152,7 +161,9 @@ func (b *OpenStackAuthBackend) authRenewHandler(ctx context.Context, req *logica
 
 	attestor := NewAttestor(req.Storage)
 	if err != nil {
-		return nil, err
+		msg := "attestor error"
+		b.Logger().Error(msg, "error", err)
+		return nil, fmt.Errorf("%s: %v", msg, err)
 	}
 
 	err = attestor.AttestMetadata(instance, role.MetadataKey, role.Name)
