@@ -1,0 +1,17 @@
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install tools
+      run: |
+        curl -sL https://taskfile.dev/install.sh | sh
+        sudo mv ./bin/task /usr/local/bin
+
+    - name: Build
+      run: task build
