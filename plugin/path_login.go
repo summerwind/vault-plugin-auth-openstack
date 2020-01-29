@@ -64,7 +64,7 @@ func (b *OpenStackAuthBackend) loginHandler(ctx context.Context, req *logical.Re
 
 	client, err := b.getClient(ctx, req.Storage)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get openstack client: %v", err)
 	}
 
 	instance, err := servers.Get(client, instanceID).Extract()
