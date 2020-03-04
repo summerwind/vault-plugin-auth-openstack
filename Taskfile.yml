@@ -2,7 +2,7 @@ version: '2'
 
 vars:
   NAME: vault-plugin-auth-openstack
-  VERSION: 0.4.2
+  VERSION: 0.4.3
 
 tasks:
   build:
