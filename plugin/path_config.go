@@ -116,8 +116,8 @@ func (b *OpenStackAuthBackend) readConfigHandler(ctx context.Context, req *logic
 			"user_domain_name":    config.UserDomainName,
 			"project_domain_id":   config.ProjectDomainID,
 			"project_domain_name": config.ProjectDomainName,
-			"domain_id":           config.ProjectDomainID,
-			"domain_name":         config.ProjectDomainName,
+			"domain_id":           config.DomainID,
+			"domain_name":         config.DomainName,
 		},
 	}
 
