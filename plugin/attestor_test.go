@@ -71,7 +71,7 @@ func TestAttest(t *testing.T) {
 		instance.Created = time.Now().Add(time.Duration(test.diff) * time.Second)
 
 		for i := 0; i < test.attempt; i++ {
-			err = attestor.Attest(instance, role, "192.168.1.1")
+			err = attestor.Attest(instance, role, []string{"192.168.1.1"})
 		}
 		if (err == nil) != test.result {
 			t.Errorf("unexpected result: %v - %v", test, err)
@@ -131,16 +131,26 @@ func TestAttestAddr(t *testing.T) {
 	var tests = []struct {
 		access    string
 		addresses []string
+		request   []string
 		result    bool
 	}{
-		{"192.168.1.1", []string{"192.168.1.1"}, true},
-		{"192.168.1.1", []string{}, true},
-		{"", []string{"192.168.1.1"}, true},
-		{"", []string{"192.168.1.1", "192.168.1.2"}, true},
-		{"192.168.1.2", []string{"192.168.1.2"}, false},
-		{"192.168.1.2", []string{}, false},
-		{"", []string{"192.168.1.2"}, false},
-		{"", []string{"192.168.1.2", "192.168.1.3"}, false},
+		{"192.168.1.1", []string{"192.168.1.1"}, []string{"192.168.1.1"}, true},
+		{"192.168.1.1", []string{}, []string{"192.168.1.1"}, true},
+		{"", []string{"192.168.1.1"}, []string{"192.168.1.1"}, true},
+		{"", []string{"192.168.1.1", "192.168.1.2"}, []string{"192.168.1.1"}, true},
+		{"192.168.1.2", []string{"192.168.1.2"}, []string{"192.168.1.1"}, false},
+		{"192.168.1.2", []string{}, []string{"192.168.1.1"}, false},
+		{"", []string{"192.168.1.2"}, []string{"192.168.1.1"}, false},
+		{"", []string{"192.168.1.2", "192.168.1.3"}, []string{"192.168.1.1"}, false},
+		// simulate proxy, correct IP only in additional request addresses
+		{"192.168.1.1", []string{"192.168.1.1"}, []string{"192.168.2.1", "192.168.1.1"}, true},
+		{"192.168.1.1", []string{}, []string{"192.168.2.1", "192.168.1.1"}, true},
+		{"", []string{"192.168.1.1"}, []string{"192.168.2.1", "192.168.1.1"}, true},
+		{"", []string{"192.168.1.1", "192.168.1.2"}, []string{"192.168.2.1", "192.168.1.1"}, true},
+		{"192.168.1.2", []string{"192.168.1.2"}, []string{"192.168.2.1", "192.168.1.1"}, false},
+		{"192.168.1.2", []string{}, []string{"192.168.2.1", "192.168.1.1"}, false},
+		{"", []string{"192.168.1.2"}, []string{"192.168.2.1", "192.168.1.1"}, false},
+		{"", []string{"192.168.1.2", "192.168.1.3"}, []string{"192.168.2.1", "192.168.1.1"}, false},
 	}
 
 	_, storage := newTestBackend(t)
@@ -164,7 +174,7 @@ func TestAttestAddr(t *testing.T) {
 			}
 		}
 
-		err := attestor.AttestAddr(instance, "192.168.1.1")
+		err := attestor.AttestAddr(instance, test.request)
 		if (err == nil) != test.result {
 			t.Errorf("unexpected result: %v - %v", test, err)
 		}

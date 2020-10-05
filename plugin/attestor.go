@@ -25,7 +25,7 @@ func NewAttestor(s logical.Storage) *Attestor {
 }
 
 // Attest is used to attest a OpenStack instance based on binded role and IP address.
-func (at *Attestor) Attest(instance *servers.Server, role *Role, addr string) error {
+func (at *Attestor) Attest(instance *servers.Server, role *Role, addrs []string) error {
 	deadline, err := at.VerifyAuthPeriod(instance, role.AuthPeriod)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (at *Attestor) Attest(instance *servers.Server, role *Role, addr string) er
 		return err
 	}
 
-	err = at.AttestAddr(instance, addr)
+	err = at.AttestAddr(instance, addrs)
 	if err != nil {
 		return err
 	}
@@ -89,26 +89,28 @@ func (at *Attestor) AttestStatus(instance *servers.Server) error {
 
 // AttestAddr is used to attest the IP address of OpenStack instance
 // with source IP address. This method support IPv4 only.
-func (at *Attestor) AttestAddr(instance *servers.Server, addr string) error {
-	var addresses map[string][]address
+func (at *Attestor) AttestAddr(instance *servers.Server, addrs []string) error {
+	var instanceAddresses map[string][]address
 
-	if instance.AccessIPv4 == addr {
-		return nil
-	}
+	for _, addr := range addrs {
+		if instance.AccessIPv4 == addr {
+			return nil
+		}
 
-	err := mapstructure.Decode(instance.Addresses, &addresses)
-	if err != nil {
-		return err
-	}
+		err := mapstructure.Decode(instance.Addresses, &instanceAddresses)
+		if err != nil {
+			return err
+		}
 
-	for _, addrs := range addresses {
-		for _, val := range addrs {
-			if val.Version != 4 {
-				continue
-			}
+		for _, instAddrs := range instanceAddresses {
+			for _, val := range instAddrs {
+				if val.Version != 4 {
+					continue
+				}
 
-			if val.Address == addr {
-				return nil
+				if val.Address == addr {
+					return nil
+				}
 			}
 		}
 	}
