@@ -42,7 +42,16 @@ $ vault write auth/openstack/config \
     auth_url="${OS_AUTH_URL}" \
     tenant_name="${OS_TENANT_NAME}" \
     username="${OS_USERNAME}" \
-    password="${OS_PASSWORD}"
+    password="${OS_PASSWORD}" \
+    request_address_headers="X-Forwarded-For" \
+    request_address_headers="X-Real-Ip"
+```
+
+If you want to use the request headers you also have to tune the vault auth plugin:
+```
+$ vault write sys/auth/openstack/tune \
+    passthrough_request_headers="X-Forwarded-For" \
+    passthrough_request_headers="X-Real-Ip"
 ```
 
 Create a role to associate the OpenStack instance with the Vault policies. The following example creates a role named "dev" associated with the vault policy "prod" and "dev". This example role is identified by the vault-role key contained in Metadata of the OpenStack instance, and up to 3 times of authentication can be attempted in 120 seconds after instance is created.
@@ -83,7 +92,7 @@ This plugin gets the instance information from the OpenStack API and attestates 
 3. Get the role configuration based on the role name. If the role configuration does not exist, the authenticate fails.
 4. Validate the authentication period specified in the role with the creation time of the instance. If the deadline was exceeded, the authentication fails.
 5. Validate the limit of authentication attempt count specified in the role. If authentication exceeds the maximum number of attempts, the authentication fails.
-6. Validate the instance IP address with the remote IP address of `vault login`. If address mismatched, the authentication fails.
+6. Validate the instance IP address with the remote IP address of `vault login`. If address mismatched, the authentication fails. If configured also the IP addresses from the request headers are used for validation.
 7. Validate the status of the instance. If the instance is not active, the authentication fails.
 8. Validate the role name contained in the metadata of the instance with the key specified in the role configuration. If the key of metadata does not exist or role name is mismatched, the authentication fails.
 9. Validate the tenant ID of the instance with the role configuration. If the tenand ID is mismatched, the authentication fails. This validation is performed only if the tenant ID is specified in the role configuration.
@@ -113,4 +122,4 @@ $ task cover
 
 ## Should I Use This?
 
-This is an experimental plugin. We don't reccomend to use this in your production.
+This is an experimental plugin. We don't recommend to use this in your production.
