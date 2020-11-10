@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"fmt"
+	"net"
 	"testing"
 	"time"
 
@@ -17,6 +18,7 @@ func newTestInstance() *servers.Server {
 		HostID:     "29d3c8c896a45aa4c34e52247875d7fefc3d94bbcc9f622b5d204362",
 		Status:     "ACTIVE",
 		AccessIPv4: "",
+		AccessIPv6: "",
 		Addresses:  map[string]interface{}{},
 		Metadata:   map[string]string{},
 		Created:    time.Now(),
@@ -24,24 +26,52 @@ func newTestInstance() *servers.Server {
 	}
 }
 
+const (
+	correctIPv4 string = "192.168.1.1"
+	wrongIPv4   string = "192.168.1.2"
+	correctIPv6 string = "2001:db8::1"
+	wrongIPv6   string = "2001:db8::2"
+	proxyIPv4   string = "192.168.2.1"
+	proxyIPv6   string = "2001:db8:1::1"
+)
+
 func TestAttest(t *testing.T) {
 	var tests = []struct {
-		diff     int
-		limit    int
-		attempt  int
-		metadata string
-		status   string
-		addr     string
-		tenantID string
-		result   bool
+		diff        int
+		limit       int
+		attempt     int
+		metadata    string
+		status      string
+		addrIPv4    string
+		addrIPv6    string
+		tenantID    string
+		requestAddr []string
+		result      bool
 	}{
-		{0, 2, 1, "test", "ACTIVE", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", true},
-		{-130, 2, 1, "test", "ACTIVE", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
-		{0, 2, 3, "test", "ACTIVE", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
-		{0, 2, 1, "invalid", "ACTIVE", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
-		{0, 2, 1, "test", "ERROR", "192.168.1.1", "fcad67a6189847c4aecfa3c81a05783b", false},
-		{0, 2, 1, "test", "ACTIVE", "192.168.1.2", "fcad67a6189847c4aecfa3c81a05783b", false},
-		{0, 2, 1, "test", "ACTIVE", "192.168.1.1", "invalid", false},
+		// success: IPv4 only
+		{0, 2, 1, "test", "ACTIVE", correctIPv4, "", "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv4}, true},
+		// success: IPv6 only
+		{0, 2, 1, "test", "ACTIVE", "", correctIPv6, "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv6}, true},
+		// success: both IPv4 and IPv6
+		{0, 2, 1, "test", "ACTIVE", correctIPv4, correctIPv6, "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv4, correctIPv6}, true},
+		// success: IPv4 and wrong IPv6
+		{0, 2, 1, "test", "ACTIVE", correctIPv4, wrongIPv6, "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv4, wrongIPv6}, true},
+		// success: IPv6 and wrong IPv4
+		{0, 2, 1, "test", "ACTIVE", wrongIPv4, correctIPv6, "fcad67a6189847c4aecfa3c81a05783b", []string{wrongIPv4, correctIPv6}, true},
+		// fail: too old
+		{-130, 2, 1, "test", "ACTIVE", correctIPv4, "", "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv4}, false},
+		// fail: to many attempts
+		{0, 2, 3, "test", "ACTIVE", correctIPv4, "", "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv4}, false},
+		// fail: wrong metadata value
+		{0, 2, 1, "invalid", "ACTIVE", correctIPv4, "", "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv4}, false},
+		// fail: instance state
+		{0, 2, 1, "test", "ERROR", correctIPv4, "", "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv4}, false},
+		// fail: wrong IPv4
+		{0, 2, 1, "test", "ACTIVE", wrongIPv4, "", "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv4}, false},
+		// fail: wrong IPv6
+		{0, 2, 1, "test", "ACTIVE", "", wrongIPv6, "fcad67a6189847c4aecfa3c81a05783b", []string{correctIPv4}, false},
+		// fail: wrong project id
+		{0, 2, 1, "test", "ACTIVE", correctIPv4, "", "invalid", []string{correctIPv4}, false},
 	}
 
 	_, storage := newTestBackend(t)
@@ -64,14 +94,15 @@ func TestAttest(t *testing.T) {
 
 		instance := newTestInstance()
 		instance.ID = fmt.Sprintf("test%d", i)
-		instance.AccessIPv4 = test.addr
+		instance.AccessIPv4 = test.addrIPv4
+		instance.AccessIPv6 = test.addrIPv6
 		instance.Metadata["vault-role"] = test.metadata
 		instance.Status = test.status
 		instance.TenantID = test.tenantID
 		instance.Created = time.Now().Add(time.Duration(test.diff) * time.Second)
 
 		for i := 0; i < test.attempt; i++ {
-			err = attestor.Attest(instance, role, "192.168.1.1")
+			err = attestor.Attest(instance, role, test.requestAddr)
 		}
 		if (err == nil) != test.result {
 			t.Errorf("unexpected result: %v - %v", test, err)
@@ -129,18 +160,46 @@ func TestAttestStatus(t *testing.T) {
 
 func TestAttestAddr(t *testing.T) {
 	var tests = []struct {
-		access    string
-		addresses []string
-		result    bool
+		accessIPv4 string
+		accessIPv6 string
+		addresses  []string
+		request    []string
+		result     bool
 	}{
-		{"192.168.1.1", []string{"192.168.1.1"}, true},
-		{"192.168.1.1", []string{}, true},
-		{"", []string{"192.168.1.1"}, true},
-		{"", []string{"192.168.1.1", "192.168.1.2"}, true},
-		{"192.168.1.2", []string{"192.168.1.2"}, false},
-		{"192.168.1.2", []string{}, false},
-		{"", []string{"192.168.1.2"}, false},
-		{"", []string{"192.168.1.2", "192.168.1.3"}, false},
+		// success: IPv4 only
+		{correctIPv4, "", []string{correctIPv4}, []string{correctIPv4}, true},
+		// success: IPv6 only
+		{correctIPv6, "", []string{correctIPv6}, []string{correctIPv6}, true},
+		// success: IPv4 only - not in addresses list
+		{correctIPv4, "", []string{}, []string{correctIPv4}, true},
+		// success: IPv6 only - not in addresses list
+		{correctIPv6, "", []string{}, []string{correctIPv6}, true},
+		// success: IPv4 only - only in addresses list
+		{"", "", []string{correctIPv4}, []string{correctIPv4}, true},
+		// success: IPv6 only - only in addresses list
+		{"", "", []string{correctIPv6}, []string{correctIPv6}, true},
+		// success: IPv4 - only in addresses list + other
+		{"", "", []string{correctIPv4, wrongIPv4}, []string{correctIPv4}, true},
+		{"", "", []string{correctIPv4, wrongIPv6}, []string{correctIPv4}, true},
+		{"", "", []string{correctIPv4, wrongIPv4, wrongIPv6}, []string{correctIPv4}, true},
+		{"", "", []string{wrongIPv4, correctIPv4, wrongIPv6}, []string{correctIPv4}, true},
+		// fail: wrong IPv4
+		{wrongIPv4, "", []string{wrongIPv4}, []string{correctIPv4}, false},
+		{wrongIPv4, "", []string{}, []string{correctIPv4}, false},
+		{"", "", []string{wrongIPv4}, []string{correctIPv4}, false},
+		{"", "", []string{wrongIPv4, "192.168.1.3"}, []string{correctIPv4}, false},
+
+		// simulate proxy, correct IP only in additional request addresses
+		{correctIPv4, "", []string{correctIPv4}, []string{proxyIPv4, correctIPv4}, true},
+		{correctIPv4, "", []string{}, []string{proxyIPv4, correctIPv4}, true},
+		{correctIPv6, "", []string{correctIPv6}, []string{proxyIPv6, correctIPv6}, true},
+		{correctIPv6, "", []string{}, []string{proxyIPv6, correctIPv6}, true},
+		{"", "", []string{correctIPv4}, []string{proxyIPv4, correctIPv4}, true},
+		{"", "", []string{correctIPv4, wrongIPv4}, []string{proxyIPv4, correctIPv4}, true},
+		{wrongIPv4, "", []string{wrongIPv4}, []string{proxyIPv4, correctIPv4}, false},
+		{wrongIPv4, "", []string{}, []string{proxyIPv4, correctIPv4}, false},
+		{"", "", []string{wrongIPv4}, []string{proxyIPv4, correctIPv4}, false},
+		{"", "", []string{wrongIPv4, "192.168.1.3"}, []string{proxyIPv4, correctIPv4}, false},
 	}
 
 	_, storage := newTestBackend(t)
@@ -148,14 +207,19 @@ func TestAttestAddr(t *testing.T) {
 
 	for _, test := range tests {
 		instance := newTestInstance()
-		instance.AccessIPv4 = test.access
+		instance.AccessIPv4 = test.accessIPv4
+		instance.AccessIPv6 = test.accessIPv6
 		if len(test.addresses) > 0 {
 			addresses := []interface{}{}
 			for _, addr := range test.addresses {
+				ipVersion := 4
+				if net.ParseIP(addr).To4() == nil {
+					ipVersion = 6
+				}
 				addresses = append(addresses, map[string]interface{}{
 					"OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:9e:89:be",
 					"OS-EXT-IPS:type":         "fixed",
-					"version":                 float64(4),
+					"version":                 float64(ipVersion),
 					"addr":                    addr,
 				})
 			}
@@ -164,7 +228,7 @@ func TestAttestAddr(t *testing.T) {
 			}
 		}
 
-		err := attestor.AttestAddr(instance, "192.168.1.1")
+		err := attestor.AttestAddr(instance, test.request)
 		if (err == nil) != test.result {
 			t.Errorf("unexpected result: %v - %v", test, err)
 		}

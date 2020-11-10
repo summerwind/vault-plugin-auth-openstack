@@ -75,6 +75,10 @@ var configFields map[string]*framework.FieldSchema = map[string]*framework.Field
 		Type:        framework.TypeString,
 		Description: "Name of a domain which can be used to identify the source domain of either a user or a project.",
 	},
+	"request_address_headers": {
+		Type:        framework.TypeStringSlice,
+		Description: "List of header names which can be used to identify the address of the request in addition to the real remote address.",
+	},
 }
 
 func NewPathConfig(b *OpenStackAuthBackend) []*framework.Path {
@@ -105,19 +109,20 @@ func (b *OpenStackAuthBackend) readConfigHandler(ctx context.Context, req *logic
 
 	res := &logical.Response{
 		Data: map[string]interface{}{
-			"auth_url":            config.AuthURL,
-			"user_id":             config.UserID,
-			"username":            config.Username,
-			"project_id":          config.ProjectID,
-			"project_name":        config.ProjectName,
-			"tenant_id":           config.TenantID,
-			"tenant_name":         config.TenantName,
-			"user_domain_id":      config.UserDomainID,
-			"user_domain_name":    config.UserDomainName,
-			"project_domain_id":   config.ProjectDomainID,
-			"project_domain_name": config.ProjectDomainName,
-			"domain_id":           config.DomainID,
-			"domain_name":         config.DomainName,
+			"auth_url":                config.AuthURL,
+			"user_id":                 config.UserID,
+			"username":                config.Username,
+			"project_id":              config.ProjectID,
+			"project_name":            config.ProjectName,
+			"tenant_id":               config.TenantID,
+			"tenant_name":             config.TenantName,
+			"user_domain_id":          config.UserDomainID,
+			"user_domain_name":        config.UserDomainName,
+			"project_domain_id":       config.ProjectDomainID,
+			"project_domain_name":     config.ProjectDomainName,
+			"domain_id":               config.DomainID,
+			"domain_name":             config.DomainName,
+			"request_address_headers": config.RequestAddressHeaders,
 		},
 	}
 
@@ -210,6 +215,11 @@ func (b *OpenStackAuthBackend) updateConfigHandler(ctx context.Context, req *log
 	val, ok = data.GetOk("domain_name")
 	if ok {
 		config.DomainName = val.(string)
+	}
+
+	val, ok = data.GetOk("request_address_headers")
+	if ok {
+		config.RequestAddressHeaders = val.([]string)
 	}
 
 	entry, err := logical.StorageEntryJSON("config", config)
