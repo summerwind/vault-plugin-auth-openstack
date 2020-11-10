@@ -88,12 +88,15 @@ func (at *Attestor) AttestStatus(instance *servers.Server) error {
 }
 
 // AttestAddr is used to attest the IP address of OpenStack instance
-// with source IP address. This method support IPv4 only.
+// with source IP address.
 func (at *Attestor) AttestAddr(instance *servers.Server, addrs []string) error {
 	var instanceAddresses map[string][]address
 
 	for _, addr := range addrs {
 		if instance.AccessIPv4 == addr {
+			return nil
+		}
+		if instance.AccessIPv6 == addr {
 			return nil
 		}
 
@@ -104,10 +107,6 @@ func (at *Attestor) AttestAddr(instance *servers.Server, addrs []string) error {
 
 		for _, instAddrs := range instanceAddresses {
 			for _, val := range instAddrs {
-				if val.Version != 4 {
-					continue
-				}
-
 				if val.Address == addr {
 					return nil
 				}
